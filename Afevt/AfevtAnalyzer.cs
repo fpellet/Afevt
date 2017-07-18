@@ -28,7 +28,7 @@ namespace Afevt
         private void AnalyzeNode(SyntaxNodeAnalysisContext context)
         {
             var node = (ObjectCreationExpressionSyntax)context.Node;
-            if (node.ArgumentList.Arguments.Any()) return;
+            if (node.ArgumentList?.Arguments == null || node.ArgumentList.Arguments.Any()) return;
 
             var typeCreated = context.SemanticModel.GetSymbolInfo(node.Type).Symbol as INamedTypeSymbol;
             if (typeCreated?.TypeKind != TypeKind.Struct) return;

@@ -186,6 +186,33 @@ namespace Afevt.Test
             Check.That(result).IsEmpty();
         }
 
+        [Fact]
+        public async Task NotThrowIfNotUseConstructor()
+        {
+            var test = @"
+    namespace ConsoleApplication1
+    {
+        public struct ValueTypeA {
+            public int Value { get; set; }
+
+            public ValueTypeA(int value) {
+                Value = value;
+            }
+        }
+
+        class TypeName
+        {   
+            public void MethodA(){
+                var a = new ValueTypeA { Value = 5 };
+            }
+        }
+    }";
+
+            var result = await Analyze(test);
+
+            Check.That(result).IsEmpty();
+        }
+
         private async Task<ICollection<Diagnostic>> Analyze(string source)
         {
             var project = CreateProject(source);
