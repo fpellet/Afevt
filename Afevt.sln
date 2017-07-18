@@ -12,8 +12,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afevt", "Afevt\Afevt.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afevt.Test", "Afevt.Test\Afevt.Test.csproj", "{FD79179C-13FA-4B91-BB6E-DE5D990B5BE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afevt.Vsix", "Afevt.Vsix\Afevt.Vsix.csproj", "{791763F6-12A8-4BC2-86E9-9A71BB52F2D4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,10 +26,6 @@ Global
 		{FD79179C-13FA-4B91-BB6E-DE5D990B5BE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD79179C-13FA-4B91-BB6E-DE5D990B5BE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD79179C-13FA-4B91-BB6E-DE5D990B5BE2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{791763F6-12A8-4BC2-86E9-9A71BB52F2D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{791763F6-12A8-4BC2-86E9-9A71BB52F2D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{791763F6-12A8-4BC2-86E9-9A71BB52F2D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{791763F6-12A8-4BC2-86E9-9A71BB52F2D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
