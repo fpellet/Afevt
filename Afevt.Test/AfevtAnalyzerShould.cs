@@ -3,15 +3,21 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
 using TestHelper;
 using Afevt;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
+using Xunit;
 
 namespace Afevt.Test
 {
-    [TestClass]
     public class AfevtAnalyzerShould : CodeFixVerifier
     {
-        [TestMethod]
+        [Fact]
         public void ReturnErrorIfCreateValueTypeWithDefaultConstructor()
         {
             var test = @"
@@ -46,7 +52,7 @@ namespace Afevt.Test
             VerifyCSharpDiagnostic(test, expected);
         }
 
-        [TestMethod]
+        [Fact]
         public void ReturnNoErrorIfCreateValueTypeWithOtherConstructor()
         {
             var test = @"
@@ -71,7 +77,7 @@ namespace Afevt.Test
             VerifyCSharpDiagnostic(test);
         }
 
-        [TestMethod]
+        [Fact]
         public void ReturnNoErrorIfCreateValueTypeWithDefautConstructorButNotOtherConstructorExists()
         {
             var test = @"
@@ -91,7 +97,7 @@ namespace Afevt.Test
             VerifyCSharpDiagnostic(test);
         }
 
-        [TestMethod]
+        [Fact]
         public void ReturnNoErrorIfCreateClassWithDefautConstructor()
         {
             var test = @"
@@ -119,7 +125,7 @@ namespace Afevt.Test
             VerifyCSharpDiagnostic(test);
         }
 
-        [TestMethod]
+        [Fact]
         public void ReturnNoErrorIfCreateWithDefaultConstructorButValueTypeIsInSystemNamespace()
         {
             var test = @"
@@ -147,7 +153,7 @@ namespace Afevt.Test
             VerifyCSharpDiagnostic(test);
         }
 
-        [TestMethod]
+        [Fact]
         public void ReturnNoErrorIfCreateWithDefaultConstructorButValueTypeIsInMicrosoftNamespace()
         {
             var test = @"
