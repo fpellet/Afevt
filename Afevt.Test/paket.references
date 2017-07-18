@@ -7,3 +7,5 @@ Microsoft.CodeAnalysis.Workspaces.Common
 Microsoft.Composition
 System.Collections.Immutable
 System.Reflection.Metadata
+xunit
+NFluent
