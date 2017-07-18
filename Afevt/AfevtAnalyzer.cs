@@ -22,15 +22,28 @@ namespace Afevt
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.ObjectCreationExpression);
+            context.RegisterSyntaxNodeAction(AnalyzeObjectCreationExpression, SyntaxKind.ObjectCreationExpression);
+            context.RegisterSyntaxNodeAction(AnalyzeDefaultExpression, SyntaxKind.DefaultExpression);
         }
 
-        private void AnalyzeNode(SyntaxNodeAnalysisContext context)
+        private void AnalyzeObjectCreationExpression(SyntaxNodeAnalysisContext context)
         {
             var node = (ObjectCreationExpressionSyntax)context.Node;
             if (node.ArgumentList?.Arguments == null || node.ArgumentList.Arguments.Any()) return;
 
-            var typeCreated = context.SemanticModel.GetSymbolInfo(node.Type).Symbol as INamedTypeSymbol;
+            AddErrorIfIsValueTypeWithOtherConstructor(context, node.Type, node);
+        }
+
+        private void AnalyzeDefaultExpression(SyntaxNodeAnalysisContext context)
+        {
+            var node = (DefaultExpressionSyntax)context.Node;
+
+            AddErrorIfIsValueTypeWithOtherConstructor(context, node.Type, node);
+        }
+
+        private static void AddErrorIfIsValueTypeWithOtherConstructor(SyntaxNodeAnalysisContext context, TypeSyntax type, CSharpSyntaxNode node)
+        {
+            var typeCreated = context.SemanticModel.GetSymbolInfo(type).Symbol as INamedTypeSymbol;
             if (typeCreated?.TypeKind != TypeKind.Struct) return;
 
             var namespaceName = typeCreated.ContainingNamespace.ToString();

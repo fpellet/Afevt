@@ -213,6 +213,33 @@ namespace Afevt.Test
             Check.That(result).IsEmpty();
         }
 
+        [Fact]
+        public async Task ReturnErrorIfUseDefaultValue()
+        {
+            var test = @"
+    namespace ConsoleApplication1
+    {
+        public struct ValueTypeA {
+            public int Value { get; set; }
+
+            public ValueTypeA(int value) {
+                Value = value;
+            }
+        }
+
+        class TypeName
+        {   
+            public void MethodA(){
+                var a = default(ValueTypeA);
+            }
+        }
+    }";
+
+            var result = await Analyze(test);
+
+            Check.That(result.Select(r => r.Id)).ContainsExactly("Afevt");
+        }
+
         private async Task<ICollection<Diagnostic>> Analyze(string source)
         {
             var project = CreateProject(source);
