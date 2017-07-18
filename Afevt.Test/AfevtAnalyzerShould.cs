@@ -1,24 +1,21 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System.Collections;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using TestHelper;
-using Afevt;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using NFluent;
 using Xunit;
 
 namespace Afevt.Test
 {
-    public class AfevtAnalyzerShould : CodeFixVerifier
+    public class AfevtAnalyzerShould
     {
         [Fact]
-        public void ReturnErrorIfCreateValueTypeWithDefaultConstructor()
+        public async Task ReturnErrorIfCreateValueTypeWithDefaultConstructor()
         {
             var test = @"
     namespace ConsoleApplication1
@@ -38,22 +35,20 @@ namespace Afevt.Test
             }
         }
     }";
-            var expected = new DiagnosticResult
-            {
-                Id = "Afevt",
-                Message = "Default constructor is prohibited, because ValueTypeA has others constructors",
-                Severity = DiagnosticSeverity.Error,
-                Locations =
-                    new[] {
-                        new DiagnosticResultLocation("Test0.cs", 15, 25)
-                    }
-            };
 
-            VerifyCSharpDiagnostic(test, expected);
+            var result = await Analyze(test);
+
+            Check.That(result).HasSize(1);
+            var error = result.First();
+            Check.That(error.Id).IsEqualTo("Afevt");
+            Check.That(error.GetMessage()).IsEqualTo("Default constructor is prohibited, because ValueTypeA has others constructors");
+            Check.That(error.Severity).IsEqualTo(DiagnosticSeverity.Error);
+            Check.That(error.Location.SourceSpan.Start).IsEqualTo(323);
+            Check.That(error.Location.SourceSpan.End).IsEqualTo(339);
         }
 
         [Fact]
-        public void ReturnNoErrorIfCreateValueTypeWithOtherConstructor()
+        public async Task ReturnNoErrorIfCreateValueTypeWithOtherConstructor()
         {
             var test = @"
     namespace ConsoleApplication1
@@ -74,11 +69,13 @@ namespace Afevt.Test
         }
     }";
 
-            VerifyCSharpDiagnostic(test);
+            var result = await Analyze(test);
+
+            Check.That(result).IsEmpty();
         }
 
         [Fact]
-        public void ReturnNoErrorIfCreateValueTypeWithDefautConstructorButNotOtherConstructorExists()
+        public async Task ReturnNoErrorIfCreateValueTypeWithDefautConstructorButNotOtherConstructorExists()
         {
             var test = @"
     namespace ConsoleApplication1
@@ -94,11 +91,13 @@ namespace Afevt.Test
         }
     }";
 
-            VerifyCSharpDiagnostic(test);
+            var result = await Analyze(test);
+
+            Check.That(result).IsEmpty();
         }
 
         [Fact]
-        public void ReturnNoErrorIfCreateClassWithDefautConstructor()
+        public async Task ReturnNoErrorIfCreateClassWithDefautConstructor()
         {
             var test = @"
     namespace ConsoleApplication1
@@ -122,11 +121,13 @@ namespace Afevt.Test
         }
     }";
 
-            VerifyCSharpDiagnostic(test);
+            var result = await Analyze(test);
+
+            Check.That(result).IsEmpty();
         }
 
         [Fact]
-        public void ReturnNoErrorIfCreateWithDefaultConstructorButValueTypeIsInSystemNamespace()
+        public async Task ReturnNoErrorIfCreateWithDefaultConstructorButValueTypeIsInSystemNamespace()
         {
             var test = @"
     namespace System.Joe.Indien 
@@ -150,11 +151,13 @@ namespace Afevt.Test
         }
     }";
 
-            VerifyCSharpDiagnostic(test);
+            var result = await Analyze(test);
+
+            Check.That(result).IsEmpty();
         }
 
         [Fact]
-        public void ReturnNoErrorIfCreateWithDefaultConstructorButValueTypeIsInMicrosoftNamespace()
+        public async Task ReturnNoErrorIfCreateWithDefaultConstructorButValueTypeIsInMicrosoftNamespace()
         {
             var test = @"
     namespace Microsoft.Joe.Indien 
@@ -178,12 +181,43 @@ namespace Afevt.Test
         }
     }";
 
-            VerifyCSharpDiagnostic(test);
+            var result = await Analyze(test);
+
+            Check.That(result).IsEmpty();
         }
 
-        protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
+        private async Task<ICollection<Diagnostic>> Analyze(string source)
         {
-            return new AfevtAnalyzer();
+            var project = CreateProject(source);
+            var compilation = await project.GetCompilationAsync();
+            var compilationWithAnalyzers = compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new AfevtAnalyzer()));
+            var diagnostics = await compilationWithAnalyzers.GetAllDiagnosticsAsync();
+
+            return diagnostics.Where(d => !d.Id.StartsWith("CS")).ToArray();
+        }
+
+        private static readonly MetadataReference CorlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+        private static readonly MetadataReference SystemCoreReference = MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
+        private static readonly MetadataReference CSharpSymbolsReference = MetadataReference.CreateFromFile(typeof(CSharpCompilation).Assembly.Location);
+        private static readonly MetadataReference CodeAnalysisReference = MetadataReference.CreateFromFile(typeof(Compilation).Assembly.Location);
+
+        private static Project CreateProject(string source, string language = LanguageNames.CSharp)
+        {
+            var projectName = "TestProject";
+            var projectId = ProjectId.CreateNewId(projectName);
+
+            var solution = new AdhocWorkspace()
+                .CurrentSolution
+                .AddProject(projectId, projectName, projectName, language)
+                .AddMetadataReference(projectId, CorlibReference)
+                .AddMetadataReference(projectId, SystemCoreReference)
+                .AddMetadataReference(projectId, CSharpSymbolsReference)
+                .AddMetadataReference(projectId, CodeAnalysisReference);
+
+            var fileName = "Test.cs";
+            var documentId = DocumentId.CreateNewId(projectId, fileName);
+            solution = solution.AddDocument(documentId, fileName, SourceText.From(source));
+            return solution.GetProject(projectId);
         }
     }
 }
