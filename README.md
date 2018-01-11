@@ -1,6 +1,6 @@
 # Afevt
 
-Roslyn analyzer to forbidden the default constructor of value type.
+Roslyn analyzer to forbid the default constructor of value type.
 
 ## Install
 
